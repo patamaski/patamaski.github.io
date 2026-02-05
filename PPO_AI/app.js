@@ -124,12 +124,22 @@ function setLoading(isLoading) {
 
 function speak(text) {
   if (!("speechSynthesis" in window)) return;
-  window.speechSynthesis.cancel();
-  const utterance = new SpeechSynthesisUtterance(text);
-  utterance.lang = "fi-FI";
-  utterance.rate = 1.02;
-  utterance.pitch = 1.0;
-  window.speechSynthesis.speak(utterance);
+
+  // Keskeytetään aiempi puhe
+  if (currentUtterance) {
+    window.speechSynthesis.cancel();
+  }
+
+  currentUtterance = new SpeechSynthesisUtterance(text);
+  currentUtterance.lang = "fi-FI";
+  currentUtterance.rate = 1.02;
+  currentUtterance.pitch = 1.0;
+
+  currentUtterance.onend = () => {
+    currentUtterance = null;
+  };
+
+  window.speechSynthesis.speak(currentUtterance);
 }
 
 function playLoadingSound() {
