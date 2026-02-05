@@ -19,9 +19,10 @@
 
     * { box-sizing: border-box; }
 
-    body {
+    html, body {
       margin: 0;
       padding: 0;
+      height: 100%;
       font-family: system-ui, sans-serif;
       color: var(--text);
       background: radial-gradient(circle at top, #071a2d, var(--bg));
@@ -34,11 +35,12 @@
       inset: 0;
       z-index: -5;
       overflow: hidden;
+      background: radial-gradient(circle at top, #071a2d, var(--bg));
     }
 
     .aurora {
       position: absolute;
-      inset: -200px;
+      inset: -250px;
       background: conic-gradient(
         from 180deg,
         rgba(88, 255, 177, 0.10),
@@ -46,8 +48,8 @@
         rgba(181, 109, 255, 0.10),
         rgba(88, 255, 177, 0.10)
       );
-      filter: blur(90px);
-      opacity: 0.7;
+      filter: blur(110px);
+      opacity: 0.75;
       animation: auroraMove 12s infinite linear;
     }
 
@@ -65,7 +67,7 @@
         radial-gradient(1px 1px at 70% 40%, rgba(255,255,255,0.6), transparent),
         radial-gradient(1px 1px at 40% 80%, rgba(255,255,255,0.5), transparent),
         radial-gradient(2px 2px at 85% 65%, rgba(255,255,255,0.55), transparent);
-      opacity: 0.8;
+      opacity: 0.85;
     }
 
     .container {
@@ -73,23 +75,29 @@
       margin: auto;
       padding: 26px 18px;
       text-align: center;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
     }
 
-    /* BIG LOGO */
+    /* LOGO */
     .logoWrap {
-      margin-top: 50px;
-      margin-bottom: 10px;
+      margin-top: 70px;
+      margin-bottom: 14px;
       display: flex;
       justify-content: center;
       cursor: pointer;
       user-select: none;
+      position: relative;
+      z-index: 2;
     }
 
     .logoWrap img {
       width: min(360px, 85vw);
       filter: drop-shadow(0 0 28px rgba(88,255,177,0.40));
       animation: logoGlow 2.6s infinite alternate ease-in-out;
-      transition: transform 0.6s ease, width 0.6s ease, opacity 0.6s ease;
+      transition: transform 1.1s ease, width 1.1s ease, opacity 1.1s ease;
     }
 
     @keyframes logoGlow {
@@ -102,12 +110,18 @@
       font-size: 0.95rem;
       margin-bottom: 25px;
       opacity: 0.9;
+      transition: opacity 0.6s ease;
+      z-index: 2;
+      position: relative;
     }
 
     /* UI wrapper hidden initially */
     .uiHidden {
       display: none;
-      margin-top: 10px;
+      margin-top: 20px;
+      width: 100%;
+      z-index: 2;
+      position: relative;
     }
 
     /* Panel */
@@ -121,15 +135,7 @@
       text-align: left;
     }
 
-    label {
-      display: block;
-      font-size: 0.85rem;
-      margin-top: 12px;
-      color: var(--muted);
-      font-weight: 600;
-    }
-
-    textarea, select {
+    textarea {
       width: 100%;
       margin-top: 6px;
       border-radius: 14px;
@@ -140,13 +146,10 @@
       font-size: 0.95rem;
       outline: none;
       transition: border 0.2s ease, box-shadow 0.2s ease;
-    }
-
-    textarea {
       resize: none;
     }
 
-    textarea:focus, select:focus {
+    textarea:focus {
       border-color: rgba(88,255,177,0.35);
       box-shadow: 0 0 15px rgba(88,255,177,0.12);
     }
@@ -172,6 +175,7 @@
       transition: transform 0.15s ease, box-shadow 0.2s ease, border 0.2s ease;
       color: rgba(230,240,255,0.9);
       box-shadow: 0 0 15px rgba(0,0,0,0.55);
+      position: relative;
     }
 
     .iconBtn:hover {
@@ -243,8 +247,8 @@
     }
 
     .delay1 { animation-delay: 0.15s; }
-    .delay2 { animation-delay: 0.35s; }
-    .delay3 { animation-delay: 0.6s; }
+    .delay2 { animation-delay: 0.45s; }
+    .delay3 { animation-delay: 0.75s; }
 
     @keyframes fadeIn {
       to { opacity: 1; transform: translateY(0); }
@@ -254,6 +258,98 @@
       margin-top: 20px;
       color: rgba(200,220,255,0.45);
       font-size: 0.85rem;
+      text-align: center;
+    }
+
+    /* SETTINGS POPUP */
+    .settingsPanel {
+      margin-top: 12px;
+      background: rgba(5, 10, 25, 0.85);
+      border: 1px solid rgba(120, 180, 255, 0.18);
+      border-radius: 18px;
+      padding: 12px;
+      display: none;
+    }
+
+    .settingsPanel label {
+      display: block;
+      font-size: 0.85rem;
+      margin-top: 6px;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .settingsPanel select {
+      width: 100%;
+      margin-top: 6px;
+      border-radius: 14px;
+      border: 1px solid rgba(120, 180, 255, 0.16);
+      background: rgba(5, 10, 25, 0.65);
+      color: var(--text);
+      padding: 10px 12px;
+      font-size: 0.95rem;
+      outline: none;
+    }
+
+    /* SCREEN TEAR / FLASH EFFECT */
+    .flashOverlay {
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(circle, rgba(88,255,177,0.8), rgba(0,0,0,0));
+      opacity: 0;
+      pointer-events: none;
+      z-index: 50;
+      transition: opacity 0.5s ease;
+    }
+
+    .tearLine {
+      position: fixed;
+      left: -20%;
+      top: 50%;
+      width: 140%;
+      height: 4px;
+      background: linear-gradient(
+        to right,
+        transparent,
+        rgba(88,255,177,0.9),
+        rgba(75,180,255,0.8),
+        transparent
+      );
+      opacity: 0;
+      transform: rotate(-4deg);
+      z-index: 60;
+      pointer-events: none;
+      box-shadow: 0 0 25px rgba(88,255,177,0.35);
+    }
+
+    .tearAnim {
+      animation: tearMove 1.4s ease forwards;
+    }
+
+    @keyframes tearMove {
+      0% { opacity: 0; transform: translateY(-40px) rotate(-4deg) scaleX(0.1); }
+      25% { opacity: 1; transform: translateY(0px) rotate(-4deg) scaleX(1); }
+      60% { opacity: 1; transform: translateY(40px) rotate(-4deg) scaleX(1.1); }
+      100% { opacity: 0; transform: translateY(120px) rotate(-4deg) scaleX(1.3); }
+    }
+
+    .bootText {
+      font-family: ui-monospace, monospace;
+      font-size: 0.9rem;
+      color: rgba(200,220,255,0.75);
+      text-align: center;
+      margin-top: 12px;
+      white-space: pre-line;
+      display: none;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: opacity 1s ease, transform 1s ease;
+    }
+
+    .bootText.show {
+      display: block;
+      opacity: 1;
+      transform: translateY(0px);
     }
   </style>
 </head>
@@ -263,6 +359,10 @@
     <div class="aurora"></div>
     <div class="stars"></div>
   </div>
+
+  <!-- FX -->
+  <div class="flashOverlay" id="flashOverlay"></div>
+  <div class="tearLine" id="tearLine"></div>
 
   <div class="container">
 
@@ -275,27 +375,30 @@
       Klikkaa logoa aktivoidaksesi PPO-AI:n.
     </div>
 
+    <div class="bootText" id="bootText"></div>
+
     <!-- UI hidden until activation -->
     <div class="uiHidden" id="ui">
-
       <div class="panel fade delay1">
 
-        <label>🎭 Moodi</label>
-        <select id="mode">
-          <option value="normaali">Normaali PPO</option>
-          <option value="kankkarankka">Känkkäränkkä PPO</option>
-          <option value="sitsikapteeni">Sitsikapteeni PPO</option>
-          <option value="filosofi">Pohjoisen filosofi PPO</option>
-        </select>
-
-        <label>📝 Kysymys</label>
-        <textarea id="userInput" rows="2" placeholder="Kirjoita..."></textarea>
+        <textarea id="userInput" rows="2" placeholder="Kirjoita kysymys..."></textarea>
 
         <div class="btnRow">
           <button class="iconBtn" id="askBtn" title="Kysy">📨</button>
           <button class="iconBtn" id="talkBtn" title="Puhu">🎙️</button>
+          <button class="iconBtn" id="settingsBtn" title="Asetukset">⚙️</button>
           <button class="iconBtn danger" id="stopBtn" title="Stop">🛑</button>
           <button class="iconBtn" id="clearBtn" title="Tyhjennä">🧹</button>
+        </div>
+
+        <div class="settingsPanel" id="settingsPanel">
+          <label>🎭 Moodi</label>
+          <select id="mode">
+            <option value="normaali">Normaali PPO</option>
+            <option value="kankkarankka">Känkkäränkkä PPO</option>
+            <option value="sitsikapteeni">Sitsikapteeni PPO</option>
+            <option value="filosofi">Pohjoisen filosofi PPO</option>
+          </select>
         </div>
 
         <div class="statusRow">
@@ -309,7 +412,6 @@
       <footer class="fade delay3">
         ❄️ PPO-AI käyttää Oulun kvanttiprotokollaa
       </footer>
-
     </div>
   </div>
 
@@ -323,12 +425,17 @@
   const logoWrap = document.getElementById("logoWrap");
   const activateText = document.getElementById("activateText");
   const ui = document.getElementById("ui");
-
   const ppoLogo = document.getElementById("ppoLogo");
+
+  const flashOverlay = document.getElementById("flashOverlay");
+  const tearLine = document.getElementById("tearLine");
+  const bootText = document.getElementById("bootText");
+
+  const settingsBtn = document.getElementById("settingsBtn");
+  const settingsPanel = document.getElementById("settingsPanel");
 
   const osoite = "patamaski-github-io";
 
-  // Use sound file
   const loadingSound = new Audio("./loading.wav");
   loadingSound.volume = 0.9;
 
@@ -359,27 +466,69 @@
     loadingSound.play().catch(() => {});
   }
 
+  function showFlash() {
+    flashOverlay.style.opacity = "1";
+    setTimeout(() => {
+      flashOverlay.style.opacity = "0";
+    }, 550);
+  }
+
+  function showTear() {
+    tearLine.classList.remove("tearAnim");
+    void tearLine.offsetWidth; // restart animation
+    tearLine.classList.add("tearAnim");
+  }
+
+  function startBootSequence() {
+    const lines = [
+      "PPO CORE ONLINE...",
+      "AURORA LINK ESTABLISHED...",
+      "OU LU NODE CONNECTED...",
+      "FROST PROTOCOL ACTIVE...",
+      "TURKU FIREWALL BYPASSED...",
+      "PPO-AI READY."
+    ];
+
+    bootText.textContent = "";
+    bootText.classList.add("show");
+
+    let i = 0;
+    const interval = setInterval(() => {
+      bootText.textContent += lines[i] + "\n";
+      i++;
+      if (i >= lines.length) clearInterval(interval);
+    }, 420);
+  }
+
   function activateUI() {
     if (activated) return;
     activated = true;
 
     playLoadingSound();
+    activateText.style.opacity = "0";
 
-    activateText.textContent = "PPO-AI herää...";
+    showFlash();
+    showTear();
+    startBootSequence();
 
-    // show UI after short delay (feels like booting)
+    // logo shrink + move slightly upward
+    ppoLogo.style.width = "min(240px, 70vw)";
+    ppoLogo.style.opacity = "0.95";
+    ppoLogo.style.transform = "translateY(-25px) scale(0.98)";
+
+    // show UI after longer cinematic delay
     setTimeout(() => {
       ui.style.display = "block";
       activateText.style.display = "none";
       userInput.focus();
-    }, 700);
-
-    // make logo move slightly upward & shrink
-    ppoLogo.style.width = "min(250px, 70vw)";
-    ppoLogo.style.opacity = "0.95";
+    }, 2600);
   }
 
   logoWrap.onclick = activateUI;
+
+  settingsBtn.onclick = () => {
+    settingsPanel.style.display = (settingsPanel.style.display === "block") ? "none" : "block";
+  };
 
   async function askBackend(text) {
     const backend = "https://" + osoite + ".onrender.com";
@@ -427,6 +576,7 @@
     askBackend(text);
   };
 
+  document.get.getElementById?.("clearBtn");
   document.getElementById("clearBtn").onclick = () => {
     chatBox.textContent = "";
     userInput.value = "";
