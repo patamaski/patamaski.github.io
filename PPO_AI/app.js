@@ -35,6 +35,7 @@ const loadingSound = new Audio("./loading.wav");
 loadingSound.volume = 0.9;
 
 let activated = false;
+let currentUtterance = null;
 
 /* PARTICLES */
 function resizeParticles() {
@@ -125,21 +126,25 @@ function setLoading(isLoading) {
 function speak(text) {
   if (!("speechSynthesis" in window)) return;
 
-  // Keskeytetään aiempi puhe
-  if (currentUtterance) {
-    window.speechSynthesis.cancel();
+  try {
+    if (currentUtterance) {
+      window.speechSynthesis.cancel();
+    }
+
+    currentUtterance = new SpeechSynthesisUtterance(text);
+    currentUtterance.lang = "fi-FI";
+    currentUtterance.rate = 1.02;
+    currentUtterance.pitch = 1.0;
+
+    currentUtterance.onend = () => {
+      currentUtterance = null;
+    };
+
+    window.speechSynthesis.speak(currentUtterance);
+
+  } catch (err) {
+    console.warn("Speech error:", err);
   }
-
-  currentUtterance = new SpeechSynthesisUtterance(text);
-  currentUtterance.lang = "fi-FI";
-  currentUtterance.rate = 1.02;
-  currentUtterance.pitch = 1.0;
-
-  currentUtterance.onend = () => {
-    currentUtterance = null;
-  };
-
-  window.speechSynthesis.speak(currentUtterance);
 }
 
 function playLoadingSound() {
@@ -236,6 +241,10 @@ function activateUI() {
     }, scaled(1));
 
   }, scaled(650));
+
+  setTimeout(() => {
+  userInput.focus();
+}, 200);
 }
 
 logoWrap.onclick = activateUI;
@@ -247,8 +256,16 @@ settingsBtn.onclick = () => {
 };
 
 /* BACKEND */
+let requestInProgress = false;
+
 async function askBackend(text) {
+  console.log("askBackend called:", text);
+  
+  if (requestInProgress) return;
+
   const backend = "https://" + osoite + ".onrender.com";
+
+  requestInProgress = true;
 
   appendChat("user", text);
   statusEl.textContent = "Analysoidaan...";
@@ -264,12 +281,24 @@ async function askBackend(text) {
       })
     });
 
-    const data = await res.json();
+    const raw = await res.text();
+
+    let data;
+    try {
+      data = JSON.parse(raw);
+    } catch {
+      data = { reply: raw };
+    }
 
     if (!res.ok) {
-      appendChat("assistant", "Virhe: " + (data.error || "tuntematon"));
+      appendChat("assistant", "Virhe: " + (data.error || "tuntematon virhe"));
       statusEl.textContent = "Virhe.";
-      setLoading(false);
+      return;
+    }
+
+    if (!data.reply) {
+      appendChat("assistant", "Virhe: backend ei palauttanut reply-kenttää.");
+      statusEl.textContent = "Virhe.";
       return;
     }
 
@@ -277,27 +306,41 @@ async function askBackend(text) {
     speak(data.reply);
 
     statusEl.textContent = "Valmis.";
-    setLoading(false);
 
   } catch (err) {
     console.error(err);
     appendChat("assistant", "Backend ei vastaa. Oisko Oulu jäässä?");
     statusEl.textContent = "Ei yhteyttä.";
+
+  } finally {
+    requestInProgress = false;
     setLoading(false);
   }
 }
+
+/* INPUT ENTER HANDLING */
+userInput.addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && !e.shiftKey) {
+    e.preventDefault();
+    document.getElementById("askBtn").click();
+  }
+});
 
 /* BUTTONS */
 document.getElementById("askBtn").onclick = () => {
   const text = userInput.value.trim();
   if (!text) return;
+
+  userInput.value = "";
   askBackend(text);
 };
 
 document.getElementById("clearBtn").onclick = () => {
   chatBox.textContent = "";
   userInput.value = "";
+  window.speechSynthesis.cancel();
   statusEl.textContent = "Tyhjennetty.";
+  setLoading(false);
 };
 
 /* SPEECH */
@@ -319,8 +362,10 @@ if ("webkitSpeechRecognition" in window) {
   };
 
   recognition.onresult = (event) => {
-    const transcript = event.results[0][0].transcript;
-    userInput.value = transcript;
+    const transcript = event.results[0][0].transcript.trim();
+    if (!transcript) return;
+
+    userInput.value = "";
     askBackend(transcript);
   };
 } else {
