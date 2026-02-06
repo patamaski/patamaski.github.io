@@ -127,14 +127,29 @@ function speak(text) {
   if (!("speechSynthesis" in window)) return;
 
   try {
-    if (currentUtterance) {
-      window.speechSynthesis.cancel();
-    }
+    // Chromium joskus "pausettaa" speechin
+    window.speechSynthesis.resume();
+
+    // haetaan äänet
+    const voices = window.speechSynthesis.getVoices();
+
+    // valitaan paras suomiääni (Natural jos löytyy)
+    const finnishVoice =
+      voices.find(v => v.name.includes("Natural")) ||
+      voices.find(v => v.lang.toLowerCase().startsWith("fi")) ||
+      voices[0];
+
+    // pysäytetään edellinen puhe
+    window.speechSynthesis.cancel();
 
     currentUtterance = new SpeechSynthesisUtterance(text);
     currentUtterance.lang = "fi-FI";
     currentUtterance.rate = 1.02;
     currentUtterance.pitch = 1.0;
+
+    if (finnishVoice) {
+      currentUtterance.voice = finnishVoice;
+    }
 
     currentUtterance.onend = () => {
       currentUtterance = null;
@@ -210,10 +225,19 @@ function hideBootSequence() {
 }
 
 /* UI ACTIVATE */
+function unlockSpeech() {
+  if (!("speechSynthesis" in window)) return;
+
+  const utter = new SpeechSynthesisUtterance(" ");
+  utter.volume = 0; // hiljainen
+  window.speechSynthesis.speak(utter);
+}
+
 function activateUI() {
   if (activated) return;
   activated = true;
 
+  unlockSpeech();
   playLoadingSound();
 
   const rect = ppoLogo.getBoundingClientRect();
